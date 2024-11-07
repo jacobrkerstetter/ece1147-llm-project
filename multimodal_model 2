@@ -21,11 +21,7 @@ def clip32(dataframe, images_path):
         t_id = dataframe.tweet_id.iloc[i]
         path = images_path + str(t_id) + ".jpg"
         
-        try:
-            image = Image.open(path).convert("RGB")
-        except:
-            continue
-            
+        image = Image.open(path).convert("RGB")
         image_input = clip_processor(images=image, return_tensors="pt")
         
         text = dataframe.tweet_text.iloc[i]
