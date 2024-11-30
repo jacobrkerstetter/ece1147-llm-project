@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.svm import SVC
 
 import multimodal_model 
     
@@ -22,20 +22,20 @@ def load_data(dataset_path, task, bad_tweets_path):
     
     return dataframe, y_true
 
-def handle_IP_approach_1(GC_train_dataset_path, A_train_dataset_path, GC_dev_dataset_path, A_dev_dataset_path, GC_test_dataset_path, A_test_dataset_path, train_dev_images, test_images, bad_tweets_path):
+def handle_AS_approach_1(GC_train_dataset_path, A_train_dataset_path, GC_dev_dataset_path, A_dev_dataset_path, GC_test_dataset_path, A_test_dataset_path, train_dev_images, test_images, bad_tweets_path):
 
-    GC_df_train, GC_y_train = load_data (GC_train_dataset_path, 'IP', bad_tweets_path)
-    A_df_train, A_y_train = load_data (A_train_dataset_path, 'IP', bad_tweets_path)
+    GC_df_train, GC_y_train = load_data (GC_train_dataset_path, 'AS', bad_tweets_path)
+    A_df_train, A_y_train = load_data (A_train_dataset_path, 'AS', bad_tweets_path)
     df_train = pd.concat([A_df_train, GC_df_train], axis=0)
     y_train = np.concatenate((A_y_train, GC_y_train))
 
-    GC_df_dev, GC_y_dev = load_data (GC_dev_dataset_path, 'IP', bad_tweets_path)
-    A_df_dev, A_y_dev = load_data (A_dev_dataset_path, 'IP', bad_tweets_path)
+    GC_df_dev, GC_y_dev = load_data (GC_dev_dataset_path, 'AS', bad_tweets_path)
+    A_df_dev, A_y_dev = load_data (A_dev_dataset_path, 'AS', bad_tweets_path)
     df_dev = pd.concat([A_df_dev, GC_df_dev], axis=0)
     y_dev_true = np.concatenate((A_y_dev, GC_y_dev))
     
-    GC_df_test, GC_y_test = load_data (GC_test_dataset_path, 'IP', bad_tweets_path)
-    A_df_test, A_y_test = load_data (A_test_dataset_path, 'IP', bad_tweets_path)
+    GC_df_test, GC_y_test = load_data (GC_test_dataset_path, 'AS', bad_tweets_path)
+    A_df_test, A_y_test = load_data (A_test_dataset_path, 'AS', bad_tweets_path)
     df_test = pd.concat([A_df_test, GC_df_test], axis=0)
     y_test_true = np.concatenate((A_y_test, GC_y_test))
 
@@ -43,7 +43,7 @@ def handle_IP_approach_1(GC_train_dataset_path, A_train_dataset_path, GC_dev_dat
     X_dev = multimodal_model.clip32(df_dev, train_dev_images)
     X_test = multimodal_model.clip32(df_test, test_images)
 
-    classifier = AdaBoostClassifier()
+    classifier = SVC(kernel='poly', degree=3, C=1.0, coef0=0.02,  shrinking=False, probability=True)
     classifier.fit(X_train, y_train)
  
     y_dev_pred = classifier.predict(X_dev)
@@ -67,4 +67,4 @@ if __name__ == "__main__":
 
     train_images = "data/images/image/"
     test_images = 'test/data/images/image/'
-    handle_IP_approach_1(GC_train_dataset_path, A_train_dataset_path, GC_dev_dataset_path, A_dev_dataset_path, GC_test_dataset_path, A_test_dataset_path, train_images, test_images, bad_tweets_path)
+    handle_AS_approach_1(GC_train_dataset_path, A_train_dataset_path, GC_dev_dataset_path, A_dev_dataset_path, GC_test_dataset_path, A_test_dataset_path, train_images, test_images, bad_tweets_path)
