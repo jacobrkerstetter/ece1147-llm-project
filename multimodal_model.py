@@ -16,7 +16,7 @@ def clip32(dataframe, images_path):
     clip_model = CLIPModel.from_pretrained(model_name)
     clip_processor = CLIPProcessor.from_pretrained(model_name)
     combined_features = []
-
+    
     for i in range(len(dataframe)):
         t_id = dataframe.tweet_id.iloc[i]
         path = images_path + str(t_id) + ".jpg"
