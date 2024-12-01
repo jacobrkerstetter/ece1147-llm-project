@@ -6,12 +6,12 @@ from PIL import Image
 from sklearn.preprocessing import MaxAbsScaler, MinMaxScaler
 from transformers import ElectraTokenizer, ElectraModel, LayoutLMModel, LayoutLMTokenizer, ReformerModelWithLMHead, ReformerTokenizer, CamembertModel, CamembertTokenizer, CLIPProcessor, CLIPModel
 import torch
+import os
 from torchvision import models, transforms
 from torchvision.models.detection import fasterrcnn_mobilenet_v3_large_fpn, retinanet_resnet50_fpn_v2
 
 
 def clip32(dataframe, images_path):
-    
     model_name = "openai/clip-vit-base-patch32"
     clip_model = CLIPModel.from_pretrained(model_name)
     clip_processor = CLIPProcessor.from_pretrained(model_name)
@@ -19,31 +19,50 @@ def clip32(dataframe, images_path):
     
     for i in range(len(dataframe)):
         t_id = dataframe.tweet_id.iloc[i]
-        path = images_path + str(t_id) + ".jpg"
+        path = os.path.join(images_path, f"{t_id}.jpg")
         
         try:
             image = Image.open(path).convert("RGB")
-        except:
+        except FileNotFoundError:
+            # Skip if the image is missing
+            print(f"Image not found: {path}. Skipping...")
             continue
+        except Exception as e:
+            # Handle any other image processing errors
+            print(f"Error processing image {path}: {e}. Skipping...")
+            continue
+        
+        # Process the image and text
+        try:
+            image_input = clip_processor(images=image, return_tensors="pt")
+            text = dataframe.tweet_text.iloc[i]
+            text_input = clip_processor(text=[text], return_tensors="pt", padding=True, truncation=True)
             
-        image_input = clip_processor(images=image, return_tensors="pt")
-        
-        text = dataframe.tweet_text.iloc[i]
-        text_input = clip_processor(text=[text], return_tensors="pt", padding=True, truncation=True)
-        
-        with torch.no_grad():
-            image_features = clip_model.get_image_features(**image_input)
-            text_features = clip_model.get_text_features(**text_input)
-        
-        image_features_reshaped = image_features.view(image_features.shape[0], -1).numpy()
-        text_features_pooled = text_features.view(text_features.shape[0], -1).numpy()
-        combined_features.append(np.concatenate((text_features_pooled, image_features_reshaped), axis=-1))
+            with torch.no_grad():
+                image_features = clip_model.get_image_features(**image_input)
+                text_features = clip_model.get_text_features(**text_input)
+            
+            image_features_reshaped = image_features.view(image_features.shape[0], -1).numpy()
+            text_features_pooled = text_features.view(text_features.shape[0], -1).numpy()
+            combined_features.append(np.concatenate((text_features_pooled, image_features_reshaped), axis=-1))
+        except Exception as e:
+            # Skip if there's an issue processing the current image or text
+            print(f"Error processing features for {t_id}: {e}. Skipping...")
+            continue
     
+    if not combined_features:
+        # Return an empty array if no features were successfully extracted
+        print("No valid features extracted. Returning an empty array.")
+        return np.array([])
+
+    # Concatenate and scale the features
     combined_features = np.concatenate(combined_features, axis=0)
     scaler = MaxAbsScaler()
     combined_features_scaled = scaler.fit_transform(combined_features)
 
     return combined_features_scaled
+
+
 
 def clip14(dataframe, images_path):
     
