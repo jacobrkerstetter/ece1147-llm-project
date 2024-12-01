@@ -1,6 +1,6 @@
 import ollama
 
-OUTPUT_FILE = 'ollama_responses.txt'
+OUTPUT_FILE = 'ollama_responses_abortion.txt'
 MODEL = 'llama3.2' 
 PROMPT = 'Write text for a tweet supporting pro-choice rights with no leading text.'
 
