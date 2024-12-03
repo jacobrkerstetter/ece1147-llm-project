@@ -14,12 +14,12 @@ tweet_ids = sampled_df['tweet_id']
 tweet_urls = sampled_df['tweet_url']
 persuasiveness = sampled_df['persuasiveness']
 
-with open('../data/abortion_train.csv', 'a', newline='') as f:
+with open('../data/abortion_train_llama.csv', 'a', newline='') as f:
     writer = csv.writer(f)
 
     for i, line in enumerate(file):
         stripped_line = line.replace('"', '').strip()
-        new_data = [tweet_ids.iloc[0], tweet_urls.iloc[0], stripped_line, 'support', persuasiveness.iloc[i], 'train']
+        new_data = [tweet_ids.iloc[i], tweet_urls.iloc[i], stripped_line, 'support', persuasiveness.iloc[i], 'train']
 
         writer.writerow(new_data)
 
